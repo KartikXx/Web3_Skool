@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,19 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        // Custom blockchain theme colors
+        blockchain: {
+					100: '#F0F7FF',
+					200: '#C2E0FF',
+					300: '#94CAFF',
+					400: '#4AA3FF',
+					500: '#0F84FF',
+					600: '#0A64C0',
+					700: '#074681',
+					800: '#042C52',
+					900: '#021729',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +97,81 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        'fade-in': {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(10px)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        },
+        'fade-out': {
+          '0%': { 
+            opacity: '1',
+            transform: 'translateY(0)'
+          },
+          '100%': { 
+            opacity: '0',
+            transform: 'translateY(10px)'
+          }
+        },
+        'scale-in': {
+          '0%': { 
+            transform: 'scale(0.95)',
+            opacity: '0'
+          },
+          '100%': { 
+            transform: 'scale(1)',
+            opacity: '1'
+          }
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' }
+        },
+        'slide-out-right': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100%)' }
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }
+        },
+        'glow': {
+          '0%, 100%': { 
+            boxShadow: '0 0 20px rgba(15, 132, 255, 0.3)',
+            opacity: '1'
+          },
+          '50%': { 
+            boxShadow: '0 0 30px rgba(15, 132, 255, 0.6)',
+            opacity: '0.9'
+          }
+        },
+        'path-progress': {
+          '0%': { 
+            strokeDashoffset: '1000',
+            opacity: '0.3'
+          },
+          '100%': { 
+            strokeDashoffset: '0',
+            opacity: '1'
+          }
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'fade-out': 'fade-out 0.5s ease-out',
+        'scale-in': 'scale-in 0.3s ease-out',
+        'slide-in-right': 'slide-in-right 0.5s ease-out',
+        'slide-out-right': 'slide-out-right 0.5s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+        'glow': 'glow 4s ease-in-out infinite',
+        'path-progress': 'path-progress 2s ease-in-out forwards'
 			}
 		}
 	},
