@@ -33,7 +33,7 @@ const featuredQuests: QuestProps[] = [
   {
     id: 'defi-basics',
     title: 'DeFi Fundamentals',
-    description: 'Explore decentralized finance and discover how it's reinventing traditional banking.',
+    description: 'Explore decentralized finance and discover how it\'s reinventing traditional banking.',
     level: 'intermediate',
     reward: 150,
     estimatedTime: '45 min',
