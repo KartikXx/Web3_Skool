@@ -90,15 +90,16 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full px-4"
-              as={Link}
+            {/* Fix 1: Replace Button with Link with Button styling */}
+            <Link 
               to="/sign-in"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "rounded-full px-4"
+              )}
             >
               Sign In
-            </Button>
+            </Link>
             <Button 
               size="sm" 
               className="flex items-center space-x-1.5 rounded-full px-4 bg-blockchain-500 hover:bg-blockchain-600 transition-colors"
@@ -147,14 +148,16 @@ const Navbar: React.FC = () => {
                 </Link>
               ))}
               <div className="pt-4 space-y-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-center"
-                  as={Link}
+                {/* Fix 2: Replace Button with Link with Button styling */}
+                <Link 
                   to="/sign-in"
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "w-full justify-center"
+                  )}
                 >
                   Sign In
-                </Button>
+                </Link>
                 <Button 
                   className="w-full justify-center bg-blockchain-500 hover:bg-blockchain-600"
                 >
@@ -168,6 +171,9 @@ const Navbar: React.FC = () => {
     </>
   );
 };
+
+// Import the buttonVariants from the Button component
+import { buttonVariants } from '@/components/ui/button';
 
 const BlockchainLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg 
