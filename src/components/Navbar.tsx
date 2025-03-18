@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletIcon } from '@/assets/icons';
+import { buttonVariants } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -57,7 +59,7 @@ const Navbar: React.FC = () => {
       <nav 
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 md:px-10 py-4 backdrop-blur-sm',
-          isScrolled ? 'bg-white/80 shadow-sm' : 'bg-transparent'
+          isScrolled ? 'bg-white/80 dark:bg-gray-900/80 shadow-sm' : 'bg-transparent'
         )}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -81,7 +83,7 @@ const Navbar: React.FC = () => {
                 className={cn(
                   'relative font-medium text-sm transition-colors',
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-blockchain-500 after:transition-all hover:after:w-full',
-                  link.path === location.pathname ? 'text-blockchain-600 after:w-full' : 'text-foreground/80 hover:text-foreground'
+                  link.path === location.pathname ? 'text-blockchain-600 dark:text-blockchain-400 after:w-full' : 'text-foreground/80 hover:text-foreground'
                 )}
               >
                 {link.name}
@@ -90,7 +92,7 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            {/* Fix 1: Replace Button with Link with Button styling */}
+            <ThemeToggle />
             <Link 
               to="/sign-in"
               className={cn(
@@ -110,17 +112,20 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-foreground" />
-            ) : (
-              <Menu className="w-6 h-6 text-foreground" />
-            )}
-          </button>
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button 
+              className="text-foreground"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -128,7 +133,7 @@ const Navbar: React.FC = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
-            className="fixed top-0 right-0 bottom-0 z-40 w-[300px] bg-white shadow-2xl pt-20 px-6"
+            className="fixed top-0 right-0 bottom-0 z-40 w-[300px] bg-background dark:bg-gray-900 shadow-2xl pt-20 px-6"
             variants={mobileMenuVariants}
             initial="closed"
             animate="open"
@@ -140,7 +145,7 @@ const Navbar: React.FC = () => {
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    'py-2 text-lg font-medium border-b border-gray-100',
+                    'py-2 text-lg font-medium border-b border-gray-100 dark:border-gray-800',
                     link.path === location.pathname ? 'text-blockchain-500' : 'text-foreground'
                   )}
                 >
@@ -148,7 +153,6 @@ const Navbar: React.FC = () => {
                 </Link>
               ))}
               <div className="pt-4 space-y-4">
-                {/* Fix 2: Replace Button with Link with Button styling */}
                 <Link 
                   to="/sign-in"
                   className={cn(
@@ -171,9 +175,6 @@ const Navbar: React.FC = () => {
     </>
   );
 };
-
-// Import the buttonVariants from the Button component
-import { buttonVariants } from '@/components/ui/button';
 
 const BlockchainLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg 
