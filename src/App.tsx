@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Quest from "./pages/Quest";
 import Quests from "./pages/Quests";
 import About from "./pages/About";
+import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/quests" element={<Quests />} />
             <Route path="/quest/:questId" element={<Quest />} />
             <Route path="/about" element={<About />} />
+            <Route path="/sign-in" element={<SignIn />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

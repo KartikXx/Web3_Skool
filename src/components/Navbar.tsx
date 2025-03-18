@@ -94,6 +94,8 @@ const Navbar: React.FC = () => {
               variant="outline" 
               size="sm" 
               className="rounded-full px-4"
+              as={Link}
+              to="/sign-in"
             >
               Sign In
             </Button>
@@ -148,6 +150,8 @@ const Navbar: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-center"
+                  as={Link}
+                  to="/sign-in"
                 >
                   Sign In
                 </Button>
