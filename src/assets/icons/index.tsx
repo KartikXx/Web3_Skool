@@ -15,7 +15,7 @@ import {
   Globe,
   Sparkles,
   Lightbulb,
-  ArrowRight as ArrowRightIcon
+  ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -81,5 +81,5 @@ export const IdeaIcon: React.FC<IconProps> = ({ size = 20, className, ...props }
 );
 
 export const ArrowRightIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
-  <ArrowRightIcon size={size} className={cn("stroke-blockchain-500", className)} {...props} />
+  <ArrowRight size={size} className={cn("stroke-blockchain-500", className)} {...props} />
 );

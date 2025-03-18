@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { SparklesIcon, BlockchainIcon, ArrowRight } from '@/assets/icons';
+import { SparklesIcon, BlockchainIcon, ArrowRightIcon } from '@/assets/icons';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -57,7 +58,7 @@ const Hero: React.FC = () => {
                   className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition-colors group"
                 >
                   <span>Learn More</span>
-                  <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  <ArrowRightIcon size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               </div>
             </motion.div>
