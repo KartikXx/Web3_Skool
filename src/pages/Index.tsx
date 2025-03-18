@@ -5,6 +5,9 @@ import QuestGrid from '@/components/QuestGrid';
 import ProgressPath from '@/components/ProgressPath';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CryptoStats from '@/components/CryptoStats';
+import FAQ from '@/components/FAQ';
+import Testimonials from '@/components/Testimonials';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { TokenIcon, AchievementIcon, GlobalIcon, EducationIcon } from '@/assets/icons';
@@ -18,14 +21,16 @@ const FeatureCard: React.FC<{
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
-      className="glass-card rounded-xl p-6"
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="glass-card rounded-xl p-6 hover:shadow-xl transition-all group"
     >
-      <div className="mb-4 w-12 h-12 flex items-center justify-center rounded-lg bg-blockchain-100">
+      <div className="mb-4 w-12 h-12 flex items-center justify-center rounded-lg bg-blockchain-100 group-hover:bg-blockchain-500 group-hover:text-white transition-colors">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold mb-2 group-hover:text-blockchain-500 transition-colors">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </motion.div>
   );
@@ -67,6 +72,8 @@ const Index: React.FC = () => {
       <main className="flex-1">
         <Hero />
         
+        <CryptoStats />
+        
         {/* Feature section */}
         <section className="py-20 px-6 md:px-10 relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none"></div>
@@ -75,7 +82,8 @@ const Index: React.FC = () => {
             <div className="text-center mb-16">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">How Blockchain Heroes Works</h2>
@@ -101,7 +109,11 @@ const Index: React.FC = () => {
         
         <QuestGrid />
         
+        <Testimonials />
+        
         <ProgressPath />
+        
+        <FAQ />
         
         {/* CTA Section */}
         <section className="py-20 px-6 md:px-10 bg-gradient-to-br from-blockchain-500 to-blockchain-700 text-white">
@@ -110,7 +122,8 @@ const Index: React.FC = () => {
               <div className="mb-10 md:mb-0 md:max-w-xl">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                 >
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Blockchain Journey?</h2>
@@ -122,8 +135,11 @@ const Index: React.FC = () => {
               
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Button 
                   size="lg" 

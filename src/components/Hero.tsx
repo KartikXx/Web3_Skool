@@ -1,14 +1,26 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { SparklesIcon, BlockchainIcon } from '@/assets/icons';
+import { SparklesIcon, BlockchainIcon, ArrowRight } from '@/assets/icons';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const Hero: React.FC = () => {
+  const [showVirtualAssistant, setShowVirtualAssistant] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowVirtualAssistant(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section className="relative pt-28 pb-20 overflow-hidden hero-gradient">
       <div className="absolute top-0 inset-0 z-10 bg-grid-pattern opacity-[0.02] pointer-events-none"></div>
+      
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <BlockchainBackground />
+      </div>
       
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="relative z-20 flex flex-col lg:flex-row items-center">
@@ -35,18 +47,17 @@ const Hero: React.FC = () => {
               <div className="pt-6 flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
                 <Button 
                   size="lg" 
-                  className="rounded-full px-8 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20"
+                  className="rounded-full px-8 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20 group relative overflow-hidden"
                 >
-                  Start Your Journey
+                  <span className="relative z-10">Start Your Journey</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blockchain-600 to-blockchain-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </Button>
                 <Link 
                   to="/about"
-                  className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition-colors"
+                  className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition-colors group"
                 >
                   <span>Learn More</span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 7H13M13 7L7 1M13 7L7 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               </div>
             </motion.div>
@@ -66,6 +77,41 @@ const Hero: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {showVirtualAssistant && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="fixed bottom-6 right-6 z-50 glass-card p-4 rounded-xl max-w-xs shadow-xl border border-blockchain-200"
+        >
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="absolute top-2 right-2"
+            onClick={() => setShowVirtualAssistant(false)}
+          >
+            ✕
+          </Button>
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 rounded-full bg-blockchain-500 flex items-center justify-center text-white">
+              <BlockchainIcon size={20} />
+            </div>
+            <div>
+              <h4 className="font-medium text-sm">Blockchain Guide</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Need help getting started? Try our beginner quest to learn blockchain basics!
+              </p>
+              <Button 
+                size="sm" 
+                variant="link" 
+                className="text-blockchain-500 p-0 h-auto text-xs mt-2"
+              >
+                Start Quest
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 };
@@ -96,7 +142,6 @@ const BlockAnimation: React.FC = () => {
         <BlockchainIcon size={80} className="text-white" />
       </motion.div>
       
-      {/* Particles/nodes */}
       {[...Array(5)].map((_, index) => (
         <motion.div
           key={index}
@@ -117,7 +162,6 @@ const BlockAnimation: React.FC = () => {
         />
       ))}
       
-      {/* Connection lines */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <motion.line 
           x1="50" y1="50" x2="75" y2="20" 
@@ -165,6 +209,35 @@ const BlockAnimation: React.FC = () => {
           transition={{ duration: 3, repeat: Infinity, repeatType: "reverse", delay: 2 }}
         />
       </svg>
+    </div>
+  );
+};
+
+const BlockchainBackground: React.FC = () => {
+  return (
+    <div className="w-full h-full">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-blockchain-500/10 backdrop-blur-3xl"
+          style={{
+            width: Math.random() * 200 + 50,
+            height: Math.random() * 200 + 50,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            x: [0, Math.random() * 50 - 25],
+            y: [0, Math.random() * 50 - 25],
+          }}
+          transition={{
+            duration: Math.random() * 10 + 10,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </div>
   );
 };

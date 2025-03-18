@@ -75,7 +75,8 @@ const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
           <div className="mb-12 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Begin Your Blockchain Journey</h2>
@@ -105,9 +106,10 @@ const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
         {!filterLevel && (
           <div className="mt-12 text-center">
             <Button 
-              className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20"
+              className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20 group relative overflow-hidden"
             >
-              View All Quests
+              <span className="relative z-10">View All Quests</span>
+              <span className="absolute inset-0 bg-gradient-to-r from-blockchain-600 to-blockchain-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             </Button>
           </div>
         )}

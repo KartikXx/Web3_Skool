@@ -14,7 +14,8 @@ import {
   BookOpen,
   Globe,
   Sparkles,
-  Lightbulb
+  Lightbulb,
+  ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -77,4 +78,8 @@ export const SparklesIcon: React.FC<IconProps> = ({ size = 20, className, ...pro
 
 export const IdeaIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
   <Lightbulb size={size} className={cn("stroke-blockchain-500", className)} {...props} />
+);
+
+export const ArrowRight: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
+  <ArrowRight size={size} className={cn("stroke-blockchain-500", className)} {...props} />
 );
