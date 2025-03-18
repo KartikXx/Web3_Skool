@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Quest from "./pages/Quest";
+import Quests from "./pages/Quests";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/quests" element={<Quests />} />
             <Route path="/quest/:questId" element={<Quest />} />
             <Route path="/about" element={<About />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

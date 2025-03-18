@@ -59,40 +59,58 @@ const featuredQuests: QuestProps[] = [
   },
 ];
 
-const QuestGrid: React.FC = () => {
+interface QuestGridProps {
+  filterLevel?: 'beginner' | 'intermediate' | 'advanced' | null;
+}
+
+const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
+  const filteredQuests = filterLevel 
+    ? featuredQuests.filter(quest => quest.level === filterLevel)
+    : featuredQuests;
+    
   return (
-    <section className="py-20 px-6 md:px-10">
+    <section className="py-8 px-6 md:px-10">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Begin Your Blockchain Journey</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Complete interactive quests to earn rewards and build your blockchain knowledge from beginner to expert.
-            </p>
-          </motion.div>
-        </div>
+        {!filterLevel && (
+          <div className="mb-12 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Begin Your Blockchain Journey</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Complete interactive quests to earn rewards and build your blockchain knowledge from beginner to expert.
+              </p>
+            </motion.div>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredQuests.map((quest, index) => (
-            <QuestCard 
-              key={quest.id} 
-              quest={quest} 
-              index={index}
-            />
-          ))}
+          {filteredQuests.length > 0 ? (
+            filteredQuests.map((quest, index) => (
+              <QuestCard 
+                key={quest.id} 
+                quest={quest} 
+                index={index}
+              />
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-12">
+              <p className="text-muted-foreground">No quests available for this level yet. Check back soon!</p>
+            </div>
+          )}
         </div>
         
-        <div className="mt-12 text-center">
-          <Button 
-            className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20"
-          >
-            View All Quests
-          </Button>
-        </div>
+        {!filterLevel && (
+          <div className="mt-12 text-center">
+            <Button 
+              className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20"
+            >
+              View All Quests
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
