@@ -1,122 +1,167 @@
-
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Lock, Award, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { QuestIcon, TokenIcon } from '@/assets/icons';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { startQuest } from '@/lib/firebase';
+import { toast } from '@/components/ui/use-toast';
 
 export interface QuestProps {
   id: string;
   title: string;
   description: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
-  completed?: boolean;
-  locked?: boolean;
+  level: string | 'beginner' | 'intermediate' | 'advanced';
   reward: number;
-  estimatedTime: string;
+  estimatedTime?: string;
+  locked?: boolean;
+  completed?: boolean;
 }
 
 interface QuestCardProps {
   quest: QuestProps;
   index: number;
-  className?: string;
 }
 
-const levelColors = {
-  beginner: 'bg-green-100 text-green-700',
-  intermediate: 'bg-blue-100 text-blue-700',
-  advanced: 'bg-purple-100 text-purple-700',
-};
-
-const QuestCard: React.FC<QuestCardProps> = ({ 
-  quest, 
-  index,
-  className 
-}) => {
-  const { id, title, description, level, completed, locked, reward, estimatedTime } = quest;
-
-  // Staggered entrance animation
+const QuestCard: React.FC<QuestCardProps> = ({ quest, index }) => {
+  const { user, isAuthenticated } = useAuth();
+  
+  const getBadgeColor = (level: string) => {
+    switch(level) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400';
+      case 'intermediate':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'advanced':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400';
+    }
+  };
+  
+  const handleStartQuest = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to start this quest",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await startQuest(user.id, quest.id);
+      toast({
+        title: "Quest Started",
+        description: `You've started the quest: ${quest.title}`,
+        variant: "default"
+      });
+      window.location.href = `/quest/${quest.id}`;
+    } catch (error) {
+      console.error("Error starting quest:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start quest. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: (i: number) => ({
+      opacity: 1,
       y: 0,
       transition: {
+        delay: i * 0.1,
         duration: 0.5,
-        delay: index * 0.1,
-        ease: "easeOut"
       }
-    }
+    })
   };
   
   return (
     <motion.div
       variants={cardVariants}
       initial="hidden"
-      animate="visible"
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className={cn(
-        'group relative overflow-hidden rounded-xl transition-all duration-300',
-        locked ? 'opacity-60 hover:opacity-80' : 'hover:shadow-xl',
-        className
-      )}
+      whileInView="visible"
+      viewport={{ once: true }}
+      custom={index}
     >
-      <Link
-        to={locked ? '#' : `/quest/${id}`}
-        className={cn(
-          'block glass-card h-full p-6 border',
-          completed ? 'border-blockchain-300' : 'border-transparent'
-        )}
-      >
-        <div className="absolute top-3 right-3 flex space-x-2">
-          {/* Level badge */}
-          <span className={cn(
-            'text-xs font-medium py-1 px-2 rounded-full',
-            levelColors[level]
-          )}>
-            {level.charAt(0).toUpperCase() + level.slice(1)}
-          </span>
-          
-          {/* Status indicator */}
-          {completed && (
-            <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.5 7L6 9.5L10.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-          )}
-          
-          {locked && (
-            <span className="flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-500 rounded-full">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 5V4C3 2.34315 4.34315 1 6 1C7.65685 1 9 2.34315 9 4V5M3 5H9M3 5H2V11H10V5H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-          )}
-        </div>
-        
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-blockchain-100 text-blockchain-500">
-            <QuestIcon size={20} />
-          </div>
-          
-          <div className="flex-grow">
-            <h3 className="text-lg font-semibold mb-2">{title}</h3>
-            <p className="text-sm text-muted-foreground mb-6">{description}</p>
+      <Link to={quest.locked ? '#' : `/quest/${quest.id}`}>
+        <Card className={`h-full overflow-hidden transition-all duration-300 hover:shadow-lg ${quest.locked ? 'opacity-70 pointer-events-none' : 'cursor-pointer'}`}>
+          <div className="p-6">
+            <div className="flex justify-between items-start mb-3">
+              <Badge className={`${getBadgeColor(quest.level)} capitalize`}>
+                {quest.level}
+              </Badge>
+              {quest.completed ? (
+                <div className="text-green-500 flex items-center">
+                  <CheckCircle size={16} className="mr-1" />
+                  <span className="text-xs font-medium">Completed</span>
+                </div>
+              ) : quest.locked ? (
+                <div className="text-muted-foreground flex items-center">
+                  <Lock size={16} className="mr-1" />
+                  <span className="text-xs font-medium">Locked</span>
+                </div>
+              ) : null}
+            </div>
             
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-1.5 text-blockchain-600">
-                <TokenIcon size={16} />
-                <span className="font-medium">{reward} Tokens</span>
+            <h3 className="text-xl font-bold mb-2 group-hover:text-blockchain-500 dark:group-hover:text-blockchain-400">
+              {quest.title}
+            </h3>
+            
+            <p className="text-muted-foreground text-sm mb-4">
+              {quest.description}
+            </p>
+            
+            <div className="flex justify-between items-center mt-auto">
+              <div className="flex items-center text-muted-foreground text-xs">
+                <Clock size={14} className="mr-1" />
+                <span>{quest.estimatedTime || '15 min'}</span>
               </div>
               
-              <span className="text-muted-foreground">{estimatedTime}</span>
+              <div className="flex items-center">
+                <Award size={16} className="text-blockchain-500 mr-1" />
+                <span className="font-semibold">{quest.reward} HERO</span>
+              </div>
             </div>
+            
+            {!quest.locked && !quest.completed && (
+              <Button
+                className="w-full mt-4 bg-blockchain-500 hover:bg-blockchain-600"
+                onClick={handleStartQuest}
+              >
+                Start Quest
+              </Button>
+            )}
+            
+            {quest.completed && (
+              <Button
+                className="w-full mt-4 border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950"
+                variant="outline"
+                disabled
+              >
+                <CheckCircle size={16} className="mr-2" /> Completed
+              </Button>
+            )}
+            
+            {quest.locked && (
+              <Button
+                className="w-full mt-4"
+                variant="outline"
+                disabled
+              >
+                <Lock size={16} className="mr-2" /> Locked
+              </Button>
+            )}
           </div>
-        </div>
-        
-        {/* Hover effect gradient border */}
-        <div className="absolute inset-0 rounded-xl border-2 border-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blockchain-300 to-blockchain-500 mask-border"></div>
+        </Card>
       </Link>
     </motion.div>
   );

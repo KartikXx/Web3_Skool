@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Trophy, 
@@ -15,7 +14,10 @@ import {
   Globe,
   Sparkles,
   Lightbulb,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  LogOut,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -82,4 +84,16 @@ export const IdeaIcon: React.FC<IconProps> = ({ size = 20, className, ...props }
 
 export const ArrowRightIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
   <ArrowRight size={size} className={cn("stroke-blockchain-500", className)} {...props} />
+);
+
+export const CopyIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
+  <Copy size={size} className={cn("stroke-blockchain-500", className)} {...props} />
+);
+
+export const LogOutIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
+  <LogOut size={size} className={cn("stroke-blockchain-500", className)} {...props} />
+);
+
+export const ExternalLinkIcon: React.FC<IconProps> = ({ size = 20, className, ...props }) => (
+  <ExternalLink size={size} className={cn("stroke-blockchain-500", className)} {...props} />
 );

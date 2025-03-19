@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +18,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BlockchainIcon, WalletIcon } from '@/assets/icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWeb3 } from '@/contexts/Web3Context';
+import { useAuthentication } from '@/hooks/use-authentication';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertTriangle } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -28,7 +39,26 @@ const formSchema = z.object({
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const { signInUser, error: authError } = useAuth();
+  const { isConnecting, hasProvider, providerInfo, error: walletError } = useWeb3();
+  const { connectWallet, isAuthenticated } = useAuthentication();
+  const [walletConnectionAttempted, setWalletConnectionAttempted] = useState(false);
+  
+  // Get the path the user was trying to access before being redirected to login
+  const from = location.state?.from || '/dashboard';
+  
+  // Check if user is already authenticated and redirect if needed
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('User is already authenticated, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, from, navigate]);
+  
+  // Log location state for debugging
+  console.log('Current location state:', location.state);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,20 +72,77 @@ const SignIn = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     
-    // Simulate API call
     try {
-      // For demo purposes - would be replaced with actual auth logic
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const success = await signInUser({
+        email: values.email,
+        password: values.password,
+      });
       
-      console.log('Sign in with:', values);
-      toast.success('Successfully signed in!');
-      navigate('/dashboard');
+      if (success) {
+        console.log('Authentication succeeded, redirecting to:', from);
+        toast.success('Successfully signed in!');
+        
+        // Give more time for authentication state to fully update
+        // and use window.location for a complete page refresh
+        setTimeout(() => {
+          console.log('Forcing page reload and redirect to:', from);
+          // Force a full page reload which is more reliable for auth state changes
+          window.location.href = from || '/dashboard';
+        }, 800);
+      } else {
+        toast.error(authError || 'Invalid email or password');
+      }
     } catch (error) {
       toast.error('Sign in failed. Please try again.');
       console.error(error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWalletConnect = async () => {
+    setWalletConnectionAttempted(true);
+    
+    if (!hasProvider) {
+      toast.error('No wallet detected. Please install MetaMask.');
+      window.open('https://metamask.io/download/', '_blank');
+      return;
+    }
+    
+    try {
+      console.log('Initiating wallet connection from SignIn page...');
+      const success = await connectWallet();
+      
+      if (success) {
+        console.log('Wallet connection succeeded, redirecting to:', from);
+        toast.success('Wallet connected successfully');
+        
+        // Give more time for authentication state to fully update
+        // and use window.location for a complete page refresh
+        setTimeout(() => {
+          console.log('Forcing page reload and redirect to:', from);
+          // Force a full page reload which is more reliable for auth state changes
+          window.location.href = from || '/dashboard';
+        }, 800);
+      } else {
+        console.error('Wallet connection failed:', walletError);
+        toast.error(walletError || 'Failed to connect wallet');
+      }
+    } catch (err) {
+      console.error('Error connecting wallet from SignIn page:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(`Wallet connection error: ${errorMessage}`);
+    }
+  };
+
+  const getProviderInfo = () => {
+    if (!providerInfo) return 'No provider information available';
+    
+    return [
+      providerInfo.isMetaMask ? 'MetaMask detected' : 'MetaMask not detected',
+      providerInfo.isCoinbaseWallet ? 'Coinbase Wallet detected' : '',
+      providerInfo.hasProviders ? `Multiple providers: ${providerInfo.providerCount}` : '',
+    ].filter(Boolean).join(', ');
   };
 
   return (
@@ -168,14 +255,71 @@ const SignIn = () => {
             </div>
           </div>
 
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center justify-center gap-2"
-            onClick={() => toast.info('Wallet connection would be implemented here')}
-          >
-            <WalletIcon size={16} />
-            <span>Connect Wallet</span>
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2"
+              onClick={handleWalletConnect}
+              disabled={isConnecting}
+            >
+              <WalletIcon size={16} />
+              <span>
+                {isConnecting 
+                  ? "Connecting..." 
+                  : hasProvider 
+                    ? "Connect Wallet" 
+                    : "Install Wallet"
+                }
+              </span>
+            </Button>
+            
+            {walletError && walletConnectionAttempted && (
+              <p className="text-xs text-destructive">
+                Error: {walletError}
+              </p>
+            )}
+            
+            {hasProvider && (
+              <p className="text-xs text-muted-foreground">
+                {getProviderInfo()}
+              </p>
+            )}
+            
+            {!hasProvider && (
+              <Card className="mt-4">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm">No Wallet Detected</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <p className="text-xs text-muted-foreground">
+                    To use Web3 features, please install a wallet like MetaMask. This will enable you to connect your Ethereum wallet to the application.
+                  </p>
+                </CardContent>
+                <CardFooter className="pt-2 pb-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    onClick={() => window.open('https://metamask.io/download/', '_blank')}
+                  >
+                    Install MetaMask
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+            
+            {(walletError || walletConnectionAttempted) && (
+              <div className="pt-2">
+                <div className="flex items-center gap-2 text-xs text-amber-500 border-t pt-3">
+                  <AlertTriangle size={14} />
+                  <span>Having trouble connecting?</span>
+                  <Link to="/wallet-debug" className="font-medium underline ml-1">
+                    Try the debug tool
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="mt-6 text-center text-sm">
             Don't have an account?{' '}

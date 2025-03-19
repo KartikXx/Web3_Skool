@@ -1,69 +1,111 @@
-# Welcome to your Lovable project
+# Blockchain Heroes
 
-## Project info
+A gamified blockchain learning platform that helps users explore the world of Web3 through interactive quests, achievements, and a competitive leaderboard.
 
-**URL**: https://lovable.dev/projects/eb2e0cda-ebe6-4578-b5e9-6971090733dc
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 🎮 **Interactive Quests**: Learn blockchain concepts through practical, engaging quests
+- 🏆 **Achievement System**: Earn tokens and unlock achievements as you progress
+- 📊 **Real-time Leaderboard**: Compete with others and track your progress
+- 👛 **Wallet Integration**: Connect your crypto wallet for a seamless experience
+- 🔥 **Firebase Integration**: Real-time data synchronization and user authentication
+- 🎨 **Modern UI/UX**: Clean, responsive design with dark mode support
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/eb2e0cda-ebe6-4578-b5e9-6971090733dc) and start prompting.
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **State Management**: React Context, TanStack Query
+- **Authentication**: Firebase Authentication
+- **Database**: Firebase Firestore
+- **Animation**: Framer Motion
+- **Routing**: React Router v6
+- **Blockchain**: Ethers.js for wallet connection
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+ and npm
+- A Firebase project
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/blockchain-questers.git
+   cd blockchain-questers
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Create a Firebase project:
+   - Go to the [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project
+   - Enable Authentication (Email/Password)
+   - Create Firestore database
+   - Get your Firebase config
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Create a `.env.local` file in the root directory:
+   ```
+   VITE_FIREBASE_API_KEY=your-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+5. (Optional) Seed your database:
+   - Create a service account key in Firebase Project Settings > Service Accounts
+   - Save as `firebase/serviceAccountKey.json` (this file is gitignored)
+   - Run `node firebase/seed.js`
 
-**Edit a file directly in GitHub**
+6. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+7. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-**Use GitHub Codespaces**
+## Firebase Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Collections
+- `users`: User profiles with tokens, quests completed, etc.
+- `quests`: Learning modules with difficulty levels and rewards
+- `userQuests`: User-quest relationship data (started, completed)
+- `achievements`: Unlockable achievements and rewards
+- `userAchievements`: User-achievement relationship data
 
-## What technologies are used for this project?
+## Deployment
 
-This project is built with .
+### Deploying to Firebase Hosting
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Install Firebase CLI:
+   ```bash
+   npm install -g firebase-tools
+   ```
 
-## How can I deploy this project?
+2. Login to Firebase:
+   ```bash
+   firebase login
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/eb2e0cda-ebe6-4578-b5e9-6971090733dc) and click on Share -> Publish.
+3. Initialize Firebase:
+   ```bash
+   firebase init
+   ```
+   Select Hosting and your Firebase project.
 
-## I want to use a custom domain - is that possible?
+4. Build the project:
+   ```bash
+   npm run build
+   ```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+5. Deploy to Firebase:
+   ```bash
+   firebase deploy
+   ```

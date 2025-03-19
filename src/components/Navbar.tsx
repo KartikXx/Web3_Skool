@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
@@ -8,11 +7,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { WalletIcon } from '@/assets/icons';
 import { buttonVariants } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import WalletConnect from '@/components/WalletConnect';
+import { useAuthentication } from '@/hooks/use-authentication';
+import { toast } from 'sonner';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthentication();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,11 +33,26 @@ const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Quests', path: '/quests' },
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'About', path: '/about' },
+    { name: 'Home', path: '/', protected: false },
+    { name: 'Quests', path: '/quests', protected: true },
+    { name: 'Dashboard', path: '/dashboard', protected: true },
+    { name: 'Leaderboard', path: '/leaderboard', protected: false },
+    { name: 'About', path: '/about', protected: false },
   ];
+
+  // Handle navigation for both authenticated and unauthenticated users
+  const handleNavigation = (path: string, isProtected: boolean) => (e: React.MouseEvent) => {
+    if (isProtected && !isAuthenticated) {
+      e.preventDefault();
+      toast.error('Please sign in to access this page', {
+        description: 'This feature requires authentication',
+        action: {
+          label: 'Sign In',
+          onClick: () => navigate('/sign-in', { state: { from: path } })
+        }
+      });
+    }
+  };
 
   const mobileMenuVariants = {
     closed: {
@@ -79,7 +98,8 @@ const Navbar: React.FC = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.path}
-                to={link.path}
+                to={isAuthenticated || !link.protected ? link.path : '#'}
+                onClick={handleNavigation(link.path, link.protected)}
                 className={cn(
                   'relative font-medium text-sm transition-colors',
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-blockchain-500 after:transition-all hover:after:w-full',
@@ -93,38 +113,33 @@ const Navbar: React.FC = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
-            <Link 
-              to="/sign-in"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "rounded-full px-4"
-              )}
-            >
-              Sign In
-            </Link>
-            <Button 
-              size="sm" 
-              className="flex items-center space-x-1.5 rounded-full px-4 bg-blockchain-500 hover:bg-blockchain-600 transition-colors"
-            >
-              <WalletIcon size={16} className="stroke-white" />
-              <span>Connect Wallet</span>
-            </Button>
+            {isAuthenticated ? (
+              <WalletConnect />
+            ) : (
+              <Link 
+                to="/sign-in"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "rounded-full px-4"
+                )}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center space-x-4">
             <ThemeToggle />
-            <button 
-              className="text-foreground"
+            {isAuthenticated && <WalletConnect />}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label="Toggle Menu"
             >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
           </div>
         </div>
       </nav>
@@ -132,41 +147,42 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div 
-            className="fixed top-0 right-0 bottom-0 z-40 w-[300px] bg-background dark:bg-gray-900 shadow-2xl pt-20 px-6"
-            variants={mobileMenuVariants}
+          <motion.div
+            className="fixed inset-0 z-40 bg-background md:hidden"
             initial="closed"
             animate="open"
             exit="closed"
+            variants={mobileMenuVariants}
           >
-            <div className="flex flex-col space-y-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={cn(
-                    'py-2 text-lg font-medium border-b border-gray-100 dark:border-gray-800',
-                    link.path === location.pathname ? 'text-blockchain-500' : 'text-foreground'
-                  )}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              <div className="pt-4 space-y-4">
-                <Link 
-                  to="/sign-in"
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "w-full justify-center"
-                  )}
-                >
-                  Sign In
-                </Link>
-                <Button 
-                  className="w-full justify-center bg-blockchain-500 hover:bg-blockchain-600"
-                >
-                  Connect Wallet
-                </Button>
+            <div className="flex flex-col h-full p-8 pt-24">
+              <div className="flex flex-col space-y-6">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={isAuthenticated || !link.protected ? link.path : '#'}
+                    onClick={handleNavigation(link.path, link.protected)}
+                    className={cn(
+                      'text-xl font-medium',
+                      link.path === location.pathname ? 'text-blockchain-500' : 'text-foreground'
+                    )}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+              
+              <div className="mt-auto">
+                {!isAuthenticated && (
+                  <Link 
+                    to="/sign-in"
+                    className={cn(
+                      buttonVariants({ size: "lg" }),
+                      "w-full mt-8 bg-blockchain-500 hover:bg-blockchain-600"
+                    )}
+                  >
+                    Sign In
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
@@ -178,18 +194,21 @@ const Navbar: React.FC = () => {
 
 const BlockchainLogo: React.FC<{ className?: string }> = ({ className }) => (
   <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24"
     className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
   >
-    <path 
-      d="M12 3L17.5 6V12M12 3L6.5 6V12M12 3V9M17.5 12L12 15M17.5 12V18L12 21M12 15L6.5 12M12 15V21M6.5 12V18L12 21" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    />
+    <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
+    <line x1="16" y1="21" x2="16" y2="7"></line>
+    <line x1="8" y1="21" x2="8" y2="7"></line>
+    <line x1="12" y1="21" x2="12" y2="7"></line>
+    <line x1="4" y1="7" x2="4" y2="21"></line>
+    <line x1="20" y1="7" x2="20" y2="21"></line>
   </svg>
 );
 

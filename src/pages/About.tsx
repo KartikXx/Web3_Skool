@@ -49,21 +49,15 @@ const About: React.FC = () => {
 
   const team = [
     {
-      name: 'Alex Chen',
-      role: 'Founder & CEO',
-      bio: 'Blockchain researcher and educator with 8+ years of experience in distributed systems.',
+      name: 'Kartik Rajput',
+      role: 'Founder & UnderGrad Student',
+      bio: 'Blockchain enthusiast and a student of Computer Science and Engineering at SRMIST, Chennai',
       avatar: '/placeholder.svg'
     },
     {
-      name: 'Maya Patel',
-      role: 'Head of Education',
-      bio: 'Former professor specializing in making complex technical concepts accessible to beginners.',
-      avatar: '/placeholder.svg'
-    },
-    {
-      name: 'Julian Kim',
-      role: 'Lead Developer',
-      bio: 'Smart contract developer with a passion for building educational tools and experiences.',
+      name: 'Arpita Singh',
+      role: 'Co-Founder & UnderGrad Student',
+      bio: 'Specializing in Computer Science and Engineering at SRMIST, Chennai',
       avatar: '/placeholder.svg'
     },
   ];
