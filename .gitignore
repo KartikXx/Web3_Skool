@@ -53,3 +53,4 @@ ui-debug.log
 
 # Misc
 .eslintcache
+.vercel
