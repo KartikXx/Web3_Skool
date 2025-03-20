@@ -109,3 +109,5 @@ A gamified blockchain learning platform that helps users explore the world of We
    ```bash
    firebase deploy
    ```
+
+# This site is now deployed on VERCEL with basic CI/CD
