@@ -18,7 +18,7 @@ A gamified blockchain learning platform that helps users explore the world of We
 - **State Management**: React Context, TanStack Query
 - **Authentication**: Firebase Authentication
 - **Database**: Firebase Firestore
-- **Animation**: Framer Motionssss
+- **Animation**: Framer Motions
 - **Routing**: React Router v6
 - **Blockchain**: Ethers.js for wallet connection
 
