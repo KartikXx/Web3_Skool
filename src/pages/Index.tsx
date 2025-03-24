@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import Hero from '@/components/Hero';
 import QuestGrid from '@/components/QuestGrid';
@@ -127,9 +126,23 @@ const Index: React.FC = () => {
                   transition={{ duration: 0.6 }}
                 >
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Blockchain Journey?</h2>
-                  <p className="text-white/80">
+                  <p className="text-white/80 mb-4">
                     Join thousands of learners mastering blockchain technology and becoming WEB3 experts one quest at a time.
                   </p>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mr-2 text-white">1</div>
+                      <p className="text-white/90">Sign up for a free account</p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mr-2 text-white">2</div>
+                      <p className="text-white/90">Connect your Web3 wallet</p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center mr-2 text-white">3</div>
+                      <p className="text-white/90">Complete quests and earn rewards</p>
+                    </div>
+                  </div>
                 </motion.div>
               </div>
               
@@ -138,14 +151,22 @@ const Index: React.FC = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
+                className="flex flex-col space-y-4"
               >
                 <Button 
                   size="lg" 
                   className="bg-white text-blockchain-600 hover:bg-white/90 rounded-full px-8 shadow-lg"
+                  asChild
                 >
-                  Start Learning Now
+                  <a href="/sign-up">Sign Up Now</a>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10 rounded-full px-8"
+                  asChild
+                >
+                  <a href="/sign-in">Already have an account? Sign In</a>
                 </Button>
               </motion.div>
             </div>

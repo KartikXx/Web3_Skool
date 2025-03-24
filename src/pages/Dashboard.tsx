@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -16,20 +16,101 @@ import ShareAchievement from '@/components/ShareAchievement';
 import { Share } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
+import { Layout } from '@/components/Layout';
+import { QuestProgress } from '@/components/dashboard/QuestProgress';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Wallet } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuests } from '@/contexts/QuestContext';
+import { useFirebase } from '@/contexts/FirebaseContext';
+import { initializeDefaultUserProfile } from '@/lib/firebase';
 
 const Dashboard: React.FC = () => {
-  // Get wallet and authentication state
   const { wallet, connect } = useWeb3();
-  const { isAuthenticated, authMethod } = useAuthentication();
+  const { isAuthenticated, authMethod, hasCredentials, connectWallet } = useAuthentication();
+  const { user } = useAuth();
+  const { activeQuests, completedQuests, userQuests, isLoading, fetchUserQuests } = useQuests();
+  const { userProfile, currentUser, isLoadingProfile, refreshUserProfile } = useFirebase();
+  const [statsLoaded, setStatsLoaded] = useState(false);
 
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Force a refresh of user data when dashboard loads
+  useEffect(() => {
+    const forceRefreshUserData = async () => {
+      console.log("Dashboard: Attempting to refresh user data");
+      
+      if (currentUser && !isLoadingProfile) {
+        console.log("Dashboard: User authenticated, refreshing profile data", { userId: currentUser.uid });
+        
+        try {
+          // Force update default profile data
+          const result = await initializeDefaultUserProfile(currentUser.uid);
+          console.log("Dashboard: Profile initialization result:", result);
+          
+          // Refresh user quests data
+          await fetchUserQuests();
+          
+          // Mark stats as loaded
+          setStatsLoaded(true);
+          console.log("Dashboard: User data refreshed successfully");
+        } catch (error) {
+          console.error("Dashboard: Error refreshing user data:", error);
+          toast.error("Failed to load your profile data. Please try refreshing the page.");
+        }
+      }
+    };
+
+    forceRefreshUserData();
+  }, [currentUser, isLoadingProfile, fetchUserQuests]);
+
+  // Add a periodic refresh for real-time updates
+  useEffect(() => {
+    if (!currentUser || isLoadingProfile) return;
+    
+    console.log("Dashboard: Setting up periodic refresh");
+    
+    // Create an interval to refresh data every 15 seconds
+    const refreshInterval = setInterval(() => {
+      console.log("Dashboard: Running periodic refresh");
+      refreshUserProfile()
+        .then(() => fetchUserQuests())
+        .then(() => console.log("Dashboard: Periodic refresh complete"))
+        .catch(err => console.error("Dashboard: Error in periodic refresh:", err));
+    }, 15000);
+    
+    // Clear interval on component unmount
+    return () => {
+      console.log("Dashboard: Clearing periodic refresh interval");
+      clearInterval(refreshInterval);
+    };
+  }, [currentUser, isLoadingProfile, refreshUserProfile, fetchUserQuests]);
+
+  // Debugging logs for profile data
+  useEffect(() => {
+    console.log("Dashboard: Current user profile data:", userProfile);
+  }, [userProfile]);
+
+  // Calculate stats from real data
+  const inProgressQuestsData = activeQuests.filter(quest => quest.userStatus === 'in_progress');
+  const completedQuestsData = activeQuests.filter(quest => quest.userStatus === 'completed' || quest.userStatus === 'rewarded');
+  const userXP = userProfile?.xp || 0;
+  const userLevel = userProfile?.level || 1;
+  const userTokens = userProfile?.tokens || 0;
+  const questsCompleted = userProfile?.questsCompleted || 0;
+
   const handleConnectWallet = async () => {
     try {
-      const success = await connect();
+      if (!hasCredentials) {
+        toast.error('You must be signed in before connecting a wallet');
+        return;
+      }
+
+      const success = await connectWallet();
       if (success) {
         toast.success('Wallet connected successfully');
       }
@@ -50,276 +131,148 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Sample quests for the dashboard
-  const inProgressQuests: QuestProps[] = [
-    {
-      id: 'blockchain-basics',
-      title: 'Blockchain Basics',
-      description: 'Learn the fundamentals of blockchain technology and how it works.',
-      level: 'beginner',
-      reward: 50,
-      estimatedTime: '15 min',
-    },
-    {
-      id: 'crypto-wallets',
-      title: 'Create Your First Wallet',
-      description: 'Set up a cryptocurrency wallet and learn about private keys and seed phrases.',
-      level: 'beginner',
-      reward: 75,
-      estimatedTime: '20 min',
-    },
-  ];
-
-  const completedQuests: QuestProps[] = [
-    {
-      id: 'what-is-web3',
-      title: 'What is WEB3?',
-      description: 'An introduction to Web3 and how it differs from previous versions of the web.',
-      level: 'beginner',
-      completed: true,
-      reward: 25,
-      estimatedTime: '10 min',
-    },
-  ];
-
-  // Achievement badges
+  // Achievement badges - could be dynamically generated based on user progress
   const achievements = [
     { 
       name: 'First Steps', 
       description: 'Complete your first quest', 
-      acquired: true,
+      acquired: completedQuestsData.length > 0,
       image: '/placeholder.svg',
     },
     { 
       name: 'Crypto Beginner', 
       description: 'Complete 5 beginner quests', 
-      acquired: false,
+      acquired: completedQuestsData.filter(q => q.difficulty === 'beginner').length >= 5,
       image: '/placeholder.svg',
     },
     { 
       name: 'Wallet Master', 
       description: 'Set up your first crypto wallet', 
-      acquired: false,
+      acquired: wallet !== null,
       image: '/placeholder.svg',
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <AnimatedTransition className="flex-1 pt-24 pb-20 px-6 md:px-10">
+    <Layout>
+      <div className="container mx-auto px-4 py-10">
         <div className="max-w-7xl mx-auto">
-          <header className="mb-10">
-            <h1 className="text-3xl font-bold mb-2">Your Dashboard</h1>
-            <p className="text-muted-foreground">Track your progress and continue your learning journey</p>
-          </header>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            {/* Progress overview */}
-            <Card className="p-6 col-span-1 lg:col-span-2 glass-card">
-              <div className="flex items-center mb-4">
-                <h2 className="text-xl font-semibold">Learning Progress</h2>
-                <div className="ml-auto text-sm font-medium">3 / 24 completed</div>
-              </div>
-              <Progress value={12.5} className="h-2 mb-6" />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                  icon={<QuestIcon size={20} />}
-                  label="Quests Completed"
-                  value="3"
-                />
-                <StatCard
-                  icon={<TokenIcon size={20} />}
-                  label="Tokens Earned"
-                  value="175"
-                />
-                <StatCard
-                  icon={<AchievementIcon size={20} />}
-                  label="Achievements"
-                  value="1 / 15"
-                />
-              </div>
-              
-              <div className="mt-4 text-right">
-                <Link to="/leaderboard" className="text-sm font-medium text-blockchain-600 hover:text-blockchain-500 flex items-center justify-end gap-1">
-                  <Trophy size={14} />
-                  View Leaderboard
-                </Link>
-              </div>
-            </Card>
-            
-            {/* Wallet status */}
-            <Card className="p-6 flex flex-col glass-card">
-              <h2 className="text-xl font-semibold mb-4">Your Wallet</h2>
-              
-              {wallet ? (
-                <div className="flex flex-col flex-1">
-                  <div className="flex items-center mb-3 p-3 bg-blockchain-50 rounded-lg">
-                    <div className="w-10 h-10 rounded-full bg-blockchain-100 flex items-center justify-center mr-3">
-                      <WalletIcon size={20} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <p className="font-medium">{formatAddress(wallet.address)}</p>
-                        <button 
-                          onClick={copyAddress}
-                          className="ml-2 text-blockchain-500 hover:text-blockchain-600"
-                          title="Copy address"
-                        >
-                          <CopyIcon size={14} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{wallet.chainName}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-muted-foreground">Balance</span>
-                      <span className="text-sm font-medium">{Number(wallet.balance).toFixed(4)} ETH</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Tokens</span>
-                      <span className="text-sm font-medium">175 HERO</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-4">Your wallet is connected and ready to store your achievements and tokens.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center flex-1 text-center">
-                  <div className="w-16 h-16 bg-blockchain-100 rounded-full flex items-center justify-center mb-4">
-                    <WalletIcon size={24} />
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Connect your wallet to store achievements and tokens</p>
-                  <Button 
-                    className="w-full bg-blockchain-500 hover:bg-blockchain-600"
-                    onClick={handleConnectWallet}
-                  >
-                    Connect Wallet
-                  </Button>
-                </div>
-              )}
-            </Card>
+          {/* Welcome header */}
+          <div className="mb-10">
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {userProfile?.displayName || user?.name || 'Hero'}
+            </h1>
+            <p className="text-muted-foreground">
+              Track your progress, complete quests, and earn rewards
+            </p>
           </div>
           
-          <Tabs defaultValue="in-progress" className="mb-10">
-            <TabsList>
-              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="in-progress" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {inProgressQuests.map((quest, index) => (
-                  <QuestCard 
-                    key={quest.id} 
-                    quest={quest} 
-                    index={index}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="completed" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {completedQuests.map((quest, index) => (
-                  <QuestCard 
-                    key={quest.id} 
-                    quest={quest} 
-                    index={index}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="achievements" className="mt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {achievements.map((achievement, index) => (
-                  <Card 
-                    key={index} 
-                    className={`p-6 text-center ${achievement.acquired ? 'glass-card' : 'bg-gray-50 border-dashed opacity-60'}`}
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-full mb-4 overflow-hidden">
-                        <img 
-                          src={achievement.image} 
-                          alt={achievement.name} 
-                          className={`w-full h-full object-cover ${!achievement.acquired ? 'filter grayscale' : ''}`}
-                        />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left column - Stats */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Wallet Status */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Wallet className="mr-2 h-5 w-5 text-blockchain-500" />
+                    Wallet Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {wallet ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">Address</span>
+                        <span className="font-mono text-sm truncate max-w-[180px]">
+                          {formatAddress(wallet.address)}
+                        </span>
                       </div>
-                      <h3 className="font-semibold mb-1">{achievement.name}</h3>
-                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                      
-                      <div className="mt-4 flex items-center justify-center space-x-2">
-                        {achievement.acquired ? (
-                          <>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Acquired
-                            </span>
-                            <ShareAchievement
-                              title={achievement.name}
-                              description={achievement.description}
-                              imageUrl={achievement.image}
-                              type="achievement"
-                              trigger={
-                                <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs">
-                                  <Share size={12} />
-                                  Share
-                                </Button>
-                              }
-                            />
-                          </>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Locked
-                          </span>
-                        )}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-muted-foreground">Network</span>
+                        <span className="text-sm">{wallet.network}</span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm">HERO Balance</span>
+                          <span className="font-bold">{userTokens} HERO</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Complete quests to earn HERO tokens
+                        </div>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="glass-card rounded-xl p-6">
-            <div className="flex items-center mb-4">
-              <h2 className="text-xl font-semibold">Recommended Next Steps</h2>
+                  ) : (
+                    <div className="text-center py-3">
+                      <p className="text-muted-foreground mb-3">No wallet connected</p>
+                      <Button 
+                        className="w-full bg-blockchain-500 hover:bg-blockchain-600"
+                        onClick={handleConnectWallet}
+                      >
+                        Connect Wallet
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* User Stats */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                    Your Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold">{questsCompleted}</div>
+                    <div className="text-xs text-muted-foreground">Quests Completed</div>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold">{userXP}</div>
+                    <div className="text-xs text-muted-foreground">Total XP</div>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold">{userTokens}</div>
+                    <div className="text-xs text-muted-foreground">HERO Tokens</div>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold">{userLevel}</div>
+                    <div className="text-xs text-muted-foreground">Current Level</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Quick links */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Quick Links</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Link to="/quests" className="flex items-center justify-between p-2 hover:bg-muted rounded-md transition-colors">
+                    <span>Browse All Quests</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link to="/leaderboard" className="flex items-center justify-between p-2 hover:bg-muted rounded-md transition-colors">
+                    <span>View Leaderboard</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link to="/wallet-debug" className="flex items-center justify-between p-2 hover:bg-muted rounded-md transition-colors">
+                    <span>Wallet Debug</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
             
-            <ul className="space-y-4">
-              <RecommendationItem
-                title="Complete the 'Create Your First Wallet' quest"
-                description="Learn about cryptocurrency wallets and set up your first one."
-                actionText="Continue Quest"
-                href="/quest/crypto-wallets"
-              />
-              {!wallet ? (
-                <RecommendationItem
-                  title="Connect your wallet to the platform"
-                  description="Store your achievements and tokens on the blockchain."
-                  actionText="Connect Wallet"
-                  href="#"
-                  onClick={handleConnectWallet}
-                />
-              ) : null}
-              <RecommendationItem
-                title="Join the community"
-                description="Connect with other blockchain learners to enhance your experience."
-                actionText="Join Community"
-                href="/community"
-              />
-            </ul>
+            {/* Right column - Quest progress */}
+            <div className="lg:col-span-2">
+              <QuestProgress />
+            </div>
           </div>
         </div>
-      </AnimatedTransition>
-      
-      <Footer />
-    </div>
+      </div>
+    </Layout>
   );
 };
 
@@ -329,12 +282,14 @@ const StatCard: React.FC<{
   value: string;
 }> = ({ icon, label, value }) => {
   return (
-    <div className="bg-white rounded-lg p-4 border">
-      <div className="flex items-center mb-1">
+    <div className="p-4 bg-white dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 flex items-center">
+      <div className="w-8 h-8 rounded-md bg-blockchain-50 dark:bg-blockchain-900 flex items-center justify-center mr-3 text-blockchain-500 dark:text-blockchain-400">
         {icon}
-        <span className="text-sm text-muted-foreground ml-2">{label}</span>
       </div>
-      <div className="font-bold text-2xl">{value}</div>
+      <div>
+        <div className="text-2xl font-semibold">{value}</div>
+        <div className="text-xs text-muted-foreground">{label}</div>
+      </div>
     </div>
   );
 };
@@ -347,29 +302,22 @@ const RecommendationItem: React.FC<{
   onClick?: () => void;
 }> = ({ title, description, actionText, href, onClick }) => {
   return (
-    <li className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4">
-      <div className="mb-2 sm:mb-0 sm:mr-4">
-        <h3 className="font-medium">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      
-      {onClick ? (
-        <Button
-          className="whitespace-nowrap bg-blockchain-500 text-white hover:bg-blockchain-600 border-none"
+    <Card className="p-5 flex flex-col hover:border-blockchain-200 dark:hover:border-blockchain-700 transition-colors">
+      <h3 className="font-medium mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground mb-4 flex-1">{description}</p>
+      <div className="mt-auto">
+        <Button 
+          variant="link" 
+          asChild 
+          className="p-0 h-auto text-blockchain-600 hover:text-blockchain-500 dark:text-blockchain-400 dark:hover:text-blockchain-300" 
           onClick={onClick}
         >
-          {actionText}
+          <Link to={href}>{actionText} →</Link>
         </Button>
-      ) : (
-        <Button
-          className="whitespace-nowrap bg-blockchain-500 text-white hover:bg-blockchain-600 border-none"
-          asChild
-        >
-          <a href={href}>{actionText}</a>
-        </Button>
-      )}
-    </li>
+      </div>
+    </Card>
   );
 };
 
 export default Dashboard;
+

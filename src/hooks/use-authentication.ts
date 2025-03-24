@@ -1,111 +1,189 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useFirebase } from "@/contexts/FirebaseContext";
 import { useWeb3 } from "@/contexts/Web3Context";
 import { useEffect, useState, useCallback } from "react";
 
 export const useAuthentication = () => {
-  const { isAuthenticated: isAuthAuthenticated, user, signOutUser } = useAuth();
+  const { isAuthenticated: isAuthAuthenticated, user, signOutUser, signInUser, signUpUser } = useAuth();
+  const { currentUser } = useFirebase();
   const { wallet, connect, disconnect } = useWeb3();
   const [authMethod, setAuthMethod] = useState<'credentials' | 'wallet' | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Force immediate initialization when component mounts
   useEffect(() => {
     if (!isInitialized) {
-      console.log("Initializing authentication state with:", {
-        isAuthAuthenticated,
-        hasUser: !!user,
-        hasWallet: !!wallet
-      });
-      
-      // Initial state setup
-      if (isAuthAuthenticated && user) {
-        console.log("Initial auth method set to credentials");
-        setAuthMethod('credentials');
-      } else if (wallet) {
-        console.log("Initial auth method set to wallet");
-        setAuthMethod('wallet');
-      } else {
-        console.log("Initial auth method is null");
-        setAuthMethod(null);
-      }
-      
       setIsInitialized(true);
     }
-  }, [isInitialized, isAuthAuthenticated, user, wallet]);
+  }, [isInitialized]);
 
-  // Watch for changes to auth states
+  // Update authentication method based on user status
   useEffect(() => {
-    if (isInitialized) {
-      console.log("Authentication state changed:", { 
-        isAuthAuthenticated, 
-        hasUser: !!user, 
-        hasWallet: !!wallet,
-        walletConnected: localStorage.getItem('walletConnected'),
-        walletAddress: localStorage.getItem('walletAddress')
+    console.log("Authentication state updated:", { user, wallet });
+    
+    // If we have user data, we're authenticated with credentials
+    if (user) {
+      setAuthMethod('credentials');
+      setAuthLoading(false);
+    } 
+    // If we have a wallet but no user, we're authenticated with wallet
+    else if (wallet && !user) {
+      setAuthMethod('wallet');
+      setAuthLoading(false);
+    }
+    // Otherwise we're not authenticated
+    else {
+      setAuthMethod(null);
+      setAuthLoading(false);
+    }
+  }, [user, wallet]);
+  
+  // Format user data object to be more consistent
+  const normalizedUser = user
+    ? {
+        id: user.id,
+        email: user.email,
+        name: user.name || user.email?.split('@')[0] || "User",
+      }
+    : null;
+
+  // Login with email and password
+  const login = async (email: string, password: string) => {
+    try {
+      setAuthLoading(true);
+      console.log("Attempting login with email:", email);
+      
+      // Normalize email address (trim whitespace and convert to lowercase)
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      // Attempt to sign in with normalized email
+      const success = await signInUser({ 
+        email: normalizedEmail, 
+        password 
       });
       
-      if (isAuthAuthenticated && user) {
-        console.log("Setting auth method to credentials");
+      console.log("Login result:", success);
+      
+      if (success && user) {
         setAuthMethod('credentials');
-      } else if (wallet) {
-        console.log("Setting auth method to wallet");
-        setAuthMethod('wallet');
+        return { user, token: 'token' }; // Mock token since we don't have direct access
+      }
+      
+      throw new Error('Authentication failed');
+    } catch (error) {
+      console.error('Login error:', error);
+      // Rethrow the error with more specific information if available
+      if (error instanceof Error) {
+        throw error;
       } else {
-        console.log("Clearing auth method");
-        setAuthMethod(null);
+        throw new Error('Authentication failed. Please check your email and password.');
       }
+    } finally {
+      setAuthLoading(false);
     }
-  }, [isInitialized, isAuthAuthenticated, user, wallet]);
-
-  // Helper to normalize user data regardless of auth method
-  const normalizedUser = authMethod === 'credentials' 
-    ? { 
-        id: user?.id || '',
-        name: user?.name || 'User',
-        email: user?.email || '',
-        address: null,
+  };
+  
+  // Sign up with email and password
+  const signup = async (email: string, password: string) => {
+    try {
+      setAuthLoading(true);
+      
+      // Normalize email address (trim whitespace and convert to lowercase)
+      const normalizedEmail = email.trim().toLowerCase();
+      
+      const success = await signUpUser({ 
+        name: normalizedEmail.split('@')[0], 
+        email: normalizedEmail, 
+        password 
+      });
+      
+      if (success && user) {
+        setAuthMethod('credentials');
+        return { user, token: 'token' }; // Mock token since we don't have direct access
       }
-    : wallet 
-      ? {
-          id: wallet.address,
-          name: `Wallet ${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`,
-          email: null,
-          address: wallet.address,
+      
+      throw new Error('Sign up failed');
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  // Connect wallet
+  const connectWallet = async () => {
+    try {
+      setAuthLoading(true);
+      const connected = await connect();
+      
+      if (connected) {
+        setAuthMethod('wallet');
+        localStorage.setItem('walletConnected', 'true');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Connect wallet error:', error);
+      throw error;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  // Logout
+  const logout = async () => {
+    try {
+      setAuthLoading(true);
+      
+      // If wallet is connected, disconnect it first
+      if (wallet) {
+        console.log('Disconnecting wallet during logout');
+        try {
+          await disconnect();
+        } catch (walletError) {
+          console.error('Error disconnecting wallet:', walletError);
+          // Continue with logout even if wallet disconnect fails
         }
-      : null;
-
-  // Combined logout function that handles both auth types
-  const logout = useCallback(() => {
-    console.log("Logging out user with auth method:", authMethod);
-    if (authMethod === 'credentials') {
-      signOutUser();
-    } else if (authMethod === 'wallet') {
-      disconnect();
+      }
+      
+      // Sign out user from Firebase
+      await signOutUser();
+      
+      // Reset auth method
+      setAuthMethod(null);
+      
+      // Clear all storage items related to authentication
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('walletConnected');
+      
+      // Force a page reload after a brief timeout to ensure all state is cleared
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 300);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthMethod(null);
-  }, [authMethod, signOutUser, disconnect]);
-
-  // Enhanced connect wallet function that ensures state updates
-  const connectWallet = useCallback(async () => {
-    console.log("Connecting wallet from useAuthentication");
-    const success = await connect();
-    
-    // Force update the authMethod immediately after successful connection
-    if (success) {
-      console.log("Wallet connection successful, updating auth method");
-      setAuthMethod('wallet');
-    }
-    
-    return success;
-  }, [connect]);
+  };
 
   return {
-    isAuthenticated: !!authMethod,
-    authMethod,
     user: normalizedUser,
     wallet,
-    connectWallet,
+    isAuthenticated: !!authMethod,
+    authMethod,
+    authLoading,
+    login,
+    signup,
     logout,
+    connectWallet,
+    hasCredentials: isAuthAuthenticated && !!user,
   };
 };
 

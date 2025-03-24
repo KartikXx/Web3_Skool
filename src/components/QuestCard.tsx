@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Lock, Award, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { startQuest } from '@/lib/firebase';
-import { toast } from '@/components/ui/use-toast';
+import { useQuests } from '@/contexts/QuestContext';
+import { toast } from 'sonner';
 
 export interface QuestProps {
   id: string;
@@ -27,6 +27,8 @@ interface QuestCardProps {
 
 const QuestCard: React.FC<QuestCardProps> = ({ quest, index }) => {
   const { user, isAuthenticated } = useAuth();
+  const { startQuest } = useQuests();
+  const navigate = useNavigate();
   
   const getBadgeColor = (level: string) => {
     switch(level) {
@@ -46,29 +48,18 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, index }) => {
     e.stopPropagation();
     
     if (!isAuthenticated || !user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to start this quest",
-        variant: "destructive"
-      });
+      toast.error("Please sign in to start this quest");
+      navigate('/sign-in');
       return;
     }
     
     try {
-      await startQuest(user.id, quest.id);
-      toast({
-        title: "Quest Started",
-        description: `You've started the quest: ${quest.title}`,
-        variant: "default"
-      });
-      window.location.href = `/quest/${quest.id}`;
+      await startQuest(quest.id);
+      toast.success(`You've started the quest: ${quest.title}`);
+      navigate(`/quest/${quest.id}`);
     } catch (error) {
       console.error("Error starting quest:", error);
-      toast({
-        title: "Error",
-        description: "Failed to start quest. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to start quest. Please try again.");
     }
   };
   

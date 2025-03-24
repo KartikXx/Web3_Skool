@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, Wallet, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WalletIcon } from '@/assets/icons';
 import { buttonVariants } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import WalletConnect from '@/components/WalletConnect';
@@ -16,7 +15,7 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthentication();
+  const { isAuthenticated, logout, hasCredentials } = useAuthentication();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +53,12 @@ const Navbar: React.FC = () => {
     }
   };
 
+  const handleSignOut = () => {
+    logout();
+    toast.success('Successfully signed out');
+    navigate('/');
+  };
+
   const mobileMenuVariants = {
     closed: {
       opacity: 0,
@@ -87,7 +92,7 @@ const Navbar: React.FC = () => {
             className="flex items-center space-x-2 font-medium text-lg"
           >
             <div className="relative w-8 h-8 rounded-full bg-blockchain-500 flex items-center justify-center">
-              <BlockchainLogo className="w-5 h-5 text-white" />
+              <Wallet className="w-5 h-5 text-white" />
               <div className="absolute inset-0 rounded-full animate-glow"></div>
             </div>
             <span className="font-semibold">Blockchain Heroes</span>
@@ -103,7 +108,8 @@ const Navbar: React.FC = () => {
                 className={cn(
                   'relative font-medium text-sm transition-colors',
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-blockchain-500 after:transition-all hover:after:w-full',
-                  link.path === location.pathname ? 'text-blockchain-600 dark:text-blockchain-400 after:w-full' : 'text-foreground/80 hover:text-foreground'
+                  link.path === location.pathname ? 'text-blockchain-600 dark:text-blockchain-400 after:w-full' : 'text-foreground/80 hover:text-foreground',
+                  link.protected && !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                 )}
               >
                 {link.name}
@@ -114,17 +120,40 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             {isAuthenticated ? (
-              <WalletConnect />
+              <>
+                <WalletConnect />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleSignOut}
+                  title="Sign Out"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
             ) : (
-              <Link 
-                to="/sign-in"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "rounded-full px-4"
-                )}
-              >
-                Sign In
-              </Link>
+              <>
+                <Link 
+                  to="/sign-in"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "rounded-full px-4"
+                  )}
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/sign-up"
+                  className={cn(
+                    buttonVariants({ size: "sm" }),
+                    "rounded-full px-4 bg-blockchain-500 hover:bg-blockchain-600"
+                  )}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Sign Up
+                </Link>
+              </>
             )}
           </div>
 
@@ -163,7 +192,8 @@ const Navbar: React.FC = () => {
                     onClick={handleNavigation(link.path, link.protected)}
                     className={cn(
                       'text-xl font-medium',
-                      link.path === location.pathname ? 'text-blockchain-500' : 'text-foreground'
+                      link.path === location.pathname ? 'text-blockchain-500' : 'text-foreground',
+                      link.protected && !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                     )}
                   >
                     {link.name}
@@ -172,16 +202,36 @@ const Navbar: React.FC = () => {
               </div>
               
               <div className="mt-auto">
-                {!isAuthenticated && (
-                  <Link 
-                    to="/sign-in"
-                    className={cn(
-                      buttonVariants({ size: "lg" }),
-                      "w-full mt-8 bg-blockchain-500 hover:bg-blockchain-600"
-                    )}
+                {isAuthenticated ? (
+                  <Button 
+                    className="w-full mt-8 flex items-center gap-2 bg-red-500 hover:bg-red-600"
+                    onClick={handleSignOut}
                   >
-                    Sign In
-                  </Link>
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <div className="flex flex-col space-y-4 mt-8">
+                    <Link 
+                      to="/sign-in"
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "lg" }),
+                        "w-full"
+                      )}
+                    >
+                      Sign In
+                    </Link>
+                    <Link 
+                      to="/sign-up"
+                      className={cn(
+                        buttonVariants({ size: "lg" }),
+                        "w-full bg-blockchain-500 hover:bg-blockchain-600"
+                      )}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Sign Up
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

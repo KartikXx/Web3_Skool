@@ -11,13 +11,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { WalletIcon, NetworkIcon, CopyIcon, LogOutIcon, ExternalLinkIcon } from '@/assets/icons';
 import { toast } from 'sonner';
+import { useAuthentication } from '@/hooks/use-authentication';
+import { useNavigate } from 'react-router-dom';
 
 const WalletConnect: React.FC = () => {
-  const { wallet, isConnecting, hasProvider, providerInfo, connect, disconnect, error } = useWeb3();
+  const { wallet, isConnecting, hasProvider, providerInfo, error } = useWeb3();
+  const { connectWallet, hasCredentials, logout } = useAuthentication();
   const [connectionAttempted, setConnectionAttempted] = useState(false);
+  const navigate = useNavigate();
+
+  // Don't render the component if user doesn't have credentials (not logged in)
+  if (!hasCredentials) {
+    return null;
+  }
 
   const handleConnect = async () => {
     setConnectionAttempted(true);
+    
+    if (!hasCredentials) {
+      toast.error('You must sign in before connecting a wallet');
+      navigate('/sign-in');
+      return;
+    }
     
     if (!hasProvider) {
       toast.error('No wallet detected. Please install MetaMask or another wallet.');
@@ -27,7 +42,7 @@ const WalletConnect: React.FC = () => {
     
     try {
       console.log('Initiating wallet connection from UI button...');
-      const success = await connect();
+      const success = await connectWallet();
       
       if (success) {
         toast.success('Wallet connected successfully');
@@ -63,7 +78,8 @@ const WalletConnect: React.FC = () => {
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    // Use the logout method from useAuthentication
+    logout();
     toast.info('Wallet disconnected');
   };
 

@@ -73,8 +73,12 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
+      // Normalize the email (trim whitespace and convert to lowercase)
+      const normalizedEmail = values.email.trim().toLowerCase();
+      console.log('Attempting to sign in with email:', normalizedEmail);
+      
       const success = await signInUser({
-        email: values.email,
+        email: normalizedEmail,
         password: values.password,
       });
       
@@ -90,11 +94,14 @@ const SignIn = () => {
           window.location.href = from || '/dashboard';
         }, 800);
       } else {
+        // Show the specific error message from auth context
         toast.error(authError || 'Invalid email or password');
+        console.error('Sign in failed:', authError);
       }
     } catch (error) {
-      toast.error('Sign in failed. Please try again.');
-      console.error(error);
+      console.error('Sign in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
+      toast.error(`Sign in failed. ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

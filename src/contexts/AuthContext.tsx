@@ -44,7 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for stored auth on mount and listen for auth changes
   useEffect(() => {
+    console.log("Setting up Firebase auth state listener");
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      console.log("Firebase auth state changed:", firebaseUser ? "Logged in" : "Logged out");
       if (firebaseUser) {
         setUser({
           id: firebaseUser.uid,
@@ -66,8 +68,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     
     try {
-      const userCredential = await signInWithEmail(data.email, data.password);
+      console.log("Attempting to sign in user with email:", data.email);
+      
+      // Normalize email by trimming and converting to lowercase
+      const normalizedEmail = data.email.trim().toLowerCase();
+      
+      const userCredential = await signInWithEmail(normalizedEmail, data.password);
       const firebaseUser = userCredential.user;
+      
+      console.log("Sign in successful for user:", firebaseUser.uid);
       
       setUser({
         id: firebaseUser.uid,
@@ -80,12 +89,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const errorCode = err.code;
       let errorMessage = 'An error occurred during sign in';
       
+      console.error("Sign in error:", errorCode, err.message);
+      
       if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found') {
         errorMessage = 'Invalid email or password';
       } else if (errorCode === 'auth/invalid-email') {
         errorMessage = 'Invalid email format';
       } else if (errorCode === 'auth/too-many-requests') {
         errorMessage = 'Too many attempts. Please try again later';
+      } else if (errorCode === 'auth/invalid-credential') {
+        errorMessage = 'Invalid credentials. Please check your email and password.';
       }
       
       setError(errorMessage);
@@ -100,14 +113,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     
     try {
+      console.log("Attempting to create new user with email:", data.email);
+      
+      // Normalize email by trimming and converting to lowercase
+      const normalizedEmail = data.email.trim().toLowerCase();
+      
       // Create the user in Firebase Auth
-      const userCredential = await createUserWithEmail(data.email, data.password);
+      const userCredential = await createUserWithEmail(normalizedEmail, data.password);
       const firebaseUser = userCredential.user;
+      
+      console.log("User created successfully:", firebaseUser.uid);
       
       // Create a user profile in Firestore
       await createUserProfile(firebaseUser.uid, {
         displayName: data.name,
-        email: data.email,
+        email: normalizedEmail,
         tokens: 0,
         questsCompleted: 0,
       });
@@ -123,6 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       const errorCode = err.code;
       let errorMessage = 'An error occurred during sign up';
+      
+      console.error("Sign up error:", errorCode, err.message);
       
       if (errorCode === 'auth/email-already-in-use') {
         errorMessage = 'Email is already in use';
@@ -140,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOutUser = () => {
+    console.log("Signing out user");
     firebaseSignOut();
     setUser(null);
     setError(null);

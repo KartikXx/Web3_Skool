@@ -18,6 +18,7 @@ interface Web3ContextType {
   connect: () => Promise<boolean>;
   disconnect: () => void;
   error: string | null;
+  sendTokens: (recipient: string, amount: number) => Promise<string>;
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
@@ -138,11 +139,43 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const disconnect = () => {
     try {
+      console.log('Attempting to disconnect wallet...');
       disconnectWallet();
       setWallet(null);
+      // Clear any wallet-related state
+      localStorage.removeItem('walletConnected');
+      localStorage.removeItem('walletAddress');
       console.log('Wallet disconnected from application state');
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
+    }
+  };
+
+  // Add a function to send HERO tokens to a user
+  const sendTokens = async (recipient: string, amount: number): Promise<string> => {
+    if (!wallet) {
+      throw new Error('No wallet connected');
+    }
+
+    try {
+      console.log(`Sending ${amount} HERO tokens to ${recipient}`);
+      
+      // This is a placeholder - in a real app, you would:
+      // 1. Get the HERO token contract
+      // 2. Call the transfer function with the recipient and amount
+      // 3. Return the transaction hash
+      
+      // For now, we'll simulate a successful transfer
+      const mockTxHash = `0x${Array.from({length: 64}, () => 
+        Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      return mockTxHash;
+    } catch (error) {
+      console.error('Error sending tokens:', error);
+      throw error;
     }
   };
 
@@ -155,7 +188,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         providerInfo,
         connect,
         disconnect,
-        error
+        error,
+        sendTokens,
       }}
     >
       {children}

@@ -138,6 +138,27 @@ export const disconnectWallet = (): void => {
   // Clear wallet connection info from localStorage
   localStorage.removeItem('walletConnected');
   localStorage.removeItem('walletAddress');
+  
+  // Some wallets support disconnect - try it if available
+  try {
+    if (window.ethereum && typeof window.ethereum.disconnect === 'function') {
+      window.ethereum.disconnect();
+      console.log('Called wallet disconnect method');
+    }
+  } catch (error) {
+    console.warn('Error calling wallet disconnect method:', error);
+  }
+  
+  // For MetaMask, we can try to work around the lack of disconnect with this approach
+  if (window.ethereum && window.ethereum.isMetaMask) {
+    console.log('Attempting MetaMask-specific reset');
+    try {
+      // This will effectively reset the connection state
+      window.ethereum._handleDisconnect();
+    } catch (error) {
+      console.warn('MetaMask internal disconnect method not available:', error);
+    }
+  }
 };
 
 // Get human-readable network name from chainId

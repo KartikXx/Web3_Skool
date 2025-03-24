@@ -114,21 +114,21 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-blockchain-300 rounded-full transition-colors;
+    @apply bg-blockchain-300 rounded-full transition-colors dark:bg-blockchain-600;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-blockchain-400;
+    @apply bg-blockchain-400 dark:bg-blockchain-500;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white bg-opacity-70 backdrop-blur-lg border border-white border-opacity-20 shadow-lg;
+    @apply bg-white bg-opacity-70 backdrop-blur-lg border border-white border-opacity-20 shadow-lg dark:bg-gray-900 dark:bg-opacity-60 dark:border-gray-700 dark:border-opacity-20;
   }
 
   .glass-card-dark {
-    @apply bg-black bg-opacity-20 backdrop-blur-lg border border-white border-opacity-10 shadow-lg;
+    @apply bg-black bg-opacity-20 backdrop-blur-lg border border-white border-opacity-10 shadow-lg dark:bg-black dark:bg-opacity-40 dark:border-gray-700 dark:border-opacity-20;
   }
 
   .hero-gradient {
@@ -136,16 +136,27 @@
                 radial-gradient(circle at bottom left, rgba(15, 132, 255, 0.1), transparent 40%);
   }
 
+  /* Dark mode hero gradient with better visibility */
+  .dark .hero-gradient {
+    background: radial-gradient(circle at top right, rgba(15, 132, 255, 0.25), transparent 60%),
+                radial-gradient(circle at bottom left, rgba(15, 132, 255, 0.2), transparent 40%);
+  }
+
   .text-glow {
     text-shadow: 0 0 20px rgba(15, 132, 255, 0.5);
   }
 
+  /* Dark mode text glow with better visibility */
+  .dark .text-glow {
+    text-shadow: 0 0 25px rgba(15, 132, 255, 0.7);
+  }
+
   .quest-path {
-    @apply relative before:absolute before:w-[2px] before:bg-blockchain-200 before:left-1/2 before:-translate-x-1/2 before:h-full before:top-0 before:z-0;
+    @apply relative before:absolute before:w-[2px] before:bg-blockchain-200 before:left-1/2 before:-translate-x-1/2 before:h-full before:top-0 before:z-0 dark:before:bg-blockchain-700;
   }
 
   .quest-node {
-    @apply relative z-10 flex items-center justify-center rounded-full border-4 border-white bg-blockchain-500 text-white shadow-lg;
+    @apply relative z-10 flex items-center justify-center rounded-full border-4 border-white dark:border-gray-800 bg-blockchain-500 dark:bg-blockchain-600 text-white shadow-lg;
   }
   
   .btn-hover-effect {

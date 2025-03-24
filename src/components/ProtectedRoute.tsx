@@ -1,74 +1,53 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthentication } from '@/hooks/use-authentication';
-import { useEffect, useState } from 'react';
-import { Loader } from 'lucide-react';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, authMethod, user, wallet } = useAuthentication();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, authLoading, hasCredentials } = useAuthentication();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   
-  // Check localStorage for authentication tokens as a fallback verification
-  const hasLocalAuthData = () => {
-    return !!(localStorage.getItem('user') && localStorage.getItem('token')) || !!localStorage.getItem('walletConnected');
-  };
-  
-  // Add loading state to avoid flashing redirect
   useEffect(() => {
-    // Add a brief delay to allow auth state to be checked
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    // Redirect to sign-in if user is not authenticated and not in loading state
+    if (!isAuthenticated && !authLoading) {
+      toast.error('Authentication required', {
+        description: 'Please sign in to access this page',
+        action: {
+          label: 'Sign In',
+          onClick: () => navigate('/sign-in', { state: { from: location.pathname } })
+        }
+      });
+    }
+  }, [isAuthenticated, authLoading, location.pathname, navigate]);
 
-  // Add detailed debugging
-  useEffect(() => {
-    console.log('ProtectedRoute - Auth status:', { 
-      isAuthenticated, 
-      authMethod,
-      hasUser: !!user,
-      hasWallet: !!wallet,
-      localStorageAuth: hasLocalAuthData(),
-      location: location.pathname,
-      isLoading
-    });
-  }, [isAuthenticated, authMethod, user, wallet, location, isLoading]);
-
-  // Show loading state
-  if (isLoading) {
+  // Show loading state while checking authentication
+  if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="h-8 w-8 animate-spin text-blockchain-500" />
+      <div className="flex flex-col items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-blockchain-500 mb-4" />
+        <h2 className="text-xl font-medium">Checking authentication...</h2>
+        <p className="text-muted-foreground">Please wait while we verify your credentials</p>
       </div>
     );
   }
 
-  // Check authentication from both React state and localStorage as a fallback
-  const isUserAuthenticated = isAuthenticated || hasLocalAuthData();
-
   // Redirect to sign-in if not authenticated
-  if (!isUserAuthenticated) {
-    // Log the current location for debugging
-    console.log('Not authenticated, redirecting to sign-in from:', location.pathname);
-    
-    // Save the current location the user was trying to navigate to
-    return (
-      <Navigate 
-        to="/sign-in" 
-        state={{ from: location.pathname }} 
-        replace 
-      />
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" state={{ from: location.pathname }} replace />;
   }
 
-  // Render the protected component
-  return <>{children}</>;
-};
+  // If user has credentials but no wallet connection when needed
+  if (hasCredentials && location.pathname.includes('/quest/')) {
+    // You can add more specific checks here if certain pages require wallet connection
+    // This is just an example, modify as needed for your app
+  }
 
-export default ProtectedRoute; 
+  // Render children if authenticated
+  return <>{children}</>;
+}; 

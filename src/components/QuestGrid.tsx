@@ -1,59 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import QuestCard, { QuestProps } from './QuestCard';
+import React from 'react';
+import QuestCard from './QuestCard';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { Loader } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useQuests } from '@/contexts/QuestContext';
 
 interface QuestGridProps {
   filterLevel?: 'beginner' | 'intermediate' | 'advanced' | null;
 }
 
 const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
-  const [quests, setQuests] = useState<QuestProps[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { activeQuests, isLoading, error } = useQuests();
   
-  useEffect(() => {
-    const fetchQuests = async () => {
-      setIsLoading(true);
-      try {
-        let q = collection(db, 'quests');
-        
-        // If a filter is applied, create a filtered query
-        if (filterLevel) {
-          q = query(q, where('difficulty', '==', filterLevel));
-        }
-        
-        const querySnapshot = await getDocs(q);
-        const questsData: QuestProps[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          questsData.push({
-            id: doc.id,
-            title: data.title,
-            description: data.description,
-            level: data.difficulty,
-            reward: data.rewards,
-            estimatedTime: data.estimatedTime,
-            locked: data.locked || false,
-            completed: data.completed || false,
-          });
-        });
-        
-        setQuests(questsData);
-      } catch (err) {
-        console.error('Error fetching quests:', err);
-        setError('Failed to load quests. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchQuests();
-  }, [filterLevel]);
+  // Filter quests by difficulty if a filter is applied
+  const filteredQuests = filterLevel 
+    ? activeQuests.filter(quest => quest.difficulty === filterLevel)
+    : activeQuests.slice(0, 6); // Limit to 6 quests on home page
     
   return (
     <section className="py-8 px-6 md:px-10">
@@ -92,14 +55,28 @@ const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quests.length > 0 ? (
-              quests.map((quest, index) => (
-                <QuestCard 
-                  key={quest.id} 
-                  quest={quest} 
-                  index={index}
-                />
-              ))
+            {filteredQuests.length > 0 ? (
+              filteredQuests.map((quest, index) => {
+                // Transform quest object to match QuestCard props format
+                const questProps = {
+                  id: quest.id,
+                  title: quest.title,
+                  description: quest.description,
+                  level: quest.difficulty,
+                  reward: quest.rewards?.tokens || quest.reward?.tokens || 0,
+                  estimatedTime: quest.estimatedTime,
+                  locked: false,
+                  completed: quest.userStatus === 'completed' || quest.userStatus === 'rewarded'
+                };
+                
+                return (
+                  <QuestCard 
+                    key={quest.id} 
+                    quest={questProps} 
+                    index={index}
+                  />
+                );
+              })
             ) : (
               <div className="col-span-3 text-center py-12">
                 <p className="text-muted-foreground">No quests available for this level yet. Check back soon!</p>
@@ -110,12 +87,14 @@ const QuestGrid: React.FC<QuestGridProps> = ({ filterLevel = null }) => {
         
         {!filterLevel && (
           <div className="mt-12 text-center">
-            <Button 
-              className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20 group relative overflow-hidden"
-            >
-              <span className="relative z-10">View All Quests</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-blockchain-600 to-blockchain-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            </Button>
+            <Link to="/quests">
+              <Button 
+                className="rounded-full px-8 py-6 bg-blockchain-500 hover:bg-blockchain-600 text-white shadow-lg shadow-blockchain-500/20 group relative overflow-hidden"
+              >
+                <span className="relative z-10">View All Quests</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-blockchain-600 to-blockchain-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              </Button>
+            </Link>
           </div>
         )}
       </div>
