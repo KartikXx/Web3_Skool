@@ -32,7 +32,7 @@ A gamified blockchain learning platform that helps users explore the world of We
 
 2. Install dependencies:
    ```bash
-   npm install
+   npm install --legacy--peers-deps
    ```
 
 3. Create a Firebase project:
