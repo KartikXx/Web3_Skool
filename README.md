@@ -92,11 +92,3 @@ A gamified blockchain learning platform that helps users explore the world of We
 2. Login to Firebase:
    ```bash
    firebase login
-   ```
-
-3. Initialize Firebase:
-   ```bash
-   firebase init
-   ```
-   Select Hosting and your Firebase project.
-
