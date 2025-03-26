@@ -100,14 +100,3 @@ A gamified blockchain learning platform that helps users explore the world of We
    ```
    Select Hosting and your Firebase project.
 
-4. Build the project:
-   ```bash
-   npm run build
-   ```
-
-5. Deploy to Firebase:
-   ```bash
-   firebase deploy
-   ```
-
-# This site is now deployed on VERCEL with basic CI/CD
