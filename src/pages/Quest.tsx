@@ -12,7 +12,7 @@ const Quest: React.FC = () => {
   const navigate = useNavigate();
   const [currentQuest, setCurrentQuest] = useState<any | null>(null);
   const [loadAttempted, setLoadAttempted] = useState(false);
-
+  
   useEffect(() => {
     if (!isLoading && questId) {
       console.log(`Quest page - Looking for quest: ${questId}`);
@@ -64,7 +64,7 @@ const Quest: React.FC = () => {
       setLoadAttempted(true);
     }
   }, [questId, activeQuests, isLoading, navigate, loadAttempted]);
-
+  
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10 max-w-4xl">

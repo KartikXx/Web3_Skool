@@ -91,7 +91,7 @@ export const getUserProfile = async (userId: string) => {
     console.log(`Getting user profile for ${userId} from Firebase...`);
     
     // Get the document
-    const docSnap = await getDoc(doc(db, 'users', userId));
+  const docSnap = await getDoc(doc(db, 'users', userId));
     
     if (docSnap.exists()) {
       const data = docSnap.data();
@@ -229,7 +229,7 @@ export const fetchUserQuests = async (userId: string): Promise<UserQuest[]> => {
     return querySnapshot.docs.map((doc) => {
       const data = doc.data() as Omit<UserQuest, 'id'>;
       return {
-        id: doc.id,
+    id: doc.id,
         ...data
       } as UserQuest & { id: string };
     });
@@ -405,13 +405,13 @@ export const completeQuest = async (
 ): Promise<string> => {
   try {
     // Find the user quest document
-    const q = query(
+  const q = query(
       userQuestsCollection,
       where('userId', '==', userId),
       where('questId', '==', questId)
-    );
-    
-    const querySnapshot = await getDocs(q);
+  );
+  
+  const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
       // Create a new completed quest record
@@ -639,4 +639,4 @@ export const initializeDefaultUserProfile = async (userId: string) => {
 
 // Make sure we export the Firebase services
 export { auth, db, storage };
-export default app;
+export default app; 
